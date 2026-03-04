@@ -1,0 +1,7 @@
+flask==3.0.0
+flask-cors==4.0.0
+reportlab==4.0.9
+Pillow==10.2.0
+matplotlib==3.8.2
+numpy==1.26.3
+gunicorn==21.2.0
