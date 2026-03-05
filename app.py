@@ -1,4 +1,4 @@
-"""
+""" 
 Volt Sports Science — Report API
 Recebe dados do formulário, gera PDF com layout completo e retorna o arquivo.
 """
