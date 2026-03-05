@@ -1,4 +1,3 @@
-"""
 Volt Sports Science — Report API
 Recebe dados do formulário, gera PDF com layout completo e retorna o arquivo.
 """
@@ -236,8 +235,8 @@ def generate_pdf(d, photo_ir):
             cv.setFillAlpha(1)
             sf(cv, C_DARK); cv.rect(0, photo_h - 2, PW, PH - photo_h + 4, fill=1, stroke=0)
         sf(cv, C_GREEN); cv.rect(0, PH-4, PW, 4, fill=1, stroke=0)
-        draw_logo_full(cv, M - 15.46*mm, PH - 32*mm, w=58*mm)
-        draw_icon(cv, PW - 38*mm, PH - 42*mm, 34*mm, alpha=0.28)
+        draw_logo(cv, M - 15.46*mm, PH - 32*mm, w=58*mm)
+        draw_icon_bg(cv, PW - 38*mm, PH - 42*mm, 34*mm, alpha=0.28)
         sf(cv, C_WHITE); cv.setFont(F_BOLD, 48)
         cv.drawString(M, PH*0.72, 'REPORT')
         cv.setFont(F_BOLD, 26)
@@ -252,7 +251,7 @@ def generate_pdf(d, photo_ir):
 
     def page_jogos():
         bg(cv); top_bar(cv)
-        draw_icon(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
+        draw_icon_bg(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
         y = PH - 22*mm
 
         sf(cv, C_GREEN); cv.setFont(F_BOLD, 13)
@@ -262,7 +261,7 @@ def generate_pdf(d, photo_ir):
         jogos_p  = d['jogosParticipou']
         jogos_a  = d['jogosAnterior']
         mes_a    = d['mesAnterior']
-        jogos_ir = bar_img([jogos_a, jogos_p],
+        jogos_ir = bar_chart([jogos_a, jogos_p],
                            [mes_a, d['mes']],
                            ['#506050', '#2EC471'], 'JOGOS DISPUTADOS')
         cv.drawImage(jogos_ir, M, y - 56*mm, width=PW - 2*M, height=52*mm)
@@ -296,13 +295,13 @@ def generate_pdf(d, photo_ir):
         diff_min = mj - ma
         txt(cv, f"{'+'if diff_min>=0 else ''}{diff_min} min vs {mes_a}", M + 4*mm, bar_y + 0.5*mm, 7, C_MUTED, F_REG)
 
-        mins_ir = bar_img([mj, ma], [d['mes'], mes_a], ['#2EC471','#506050'], 'MINUTOS JOGADOS', ' min')
+        mins_ir = bar_chart([mj, ma], [d['mes'], mes_a], ['#2EC471','#506050'], 'MINUTOS JOGADOS', ' min')
         cv.drawImage(mins_ir, M, bar_y - 52*mm, width=PW - 2*M, height=48*mm)
         footer(cv, '2')
 
     def page_atividades():
         bg(cv); top_bar(cv)
-        draw_icon(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
+        draw_icon_bg(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
         y = PH - 22*mm
 
         sf(cv, C_GREEN); cv.setFont(F_BOLD, 13)
@@ -371,7 +370,7 @@ def generate_pdf(d, photo_ir):
 
     def page_readiness():
         bg(cv); top_bar(cv)
-        draw_icon(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
+        draw_icon_bg(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
 
         def make_chart(vals, prev, color):
             labels = ['S1','S2','S3','S4']
@@ -477,7 +476,7 @@ def generate_pdf(d, photo_ir):
 
     def page_alertas():
         bg(cv); top_bar(cv)
-        draw_icon(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
+        draw_icon_bg(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
         y = PH - 22*mm
 
         # PONTOS DE ATENÇÃO
@@ -533,13 +532,13 @@ def generate_pdf(d, photo_ir):
         cv.setFillAlpha(1)
         sf(cv, C_GREEN); cv.rect(0, PH-4, PW, 4, fill=1, stroke=0)
         logo_w = 60*mm
-        draw_logo_full(cv, PW/2 - logo_w/2, PH*0.55, w=logo_w)
+        draw_logo(cv, PW/2 - logo_w/2, PH*0.55, w=logo_w)
         hline(cv, PW/2 - 30*mm, PH*0.52, 60*mm, C_GREEN, 1)
         txt(cv, 'CHANGE THE MIND,',    PW/2, PH*0.49, 13, C_WHITE, F_BOLD, 'center')
         txt(cv, 'CHANGE THE ATTITUDE,', PW/2, PH*0.45, 13, C_WHITE, F_BOLD, 'center')
         txt(cv, 'CHANGE THE GAME.',     PW/2, PH*0.41, 13, C_WHITE, F_BOLD, 'center')
         txt(cv, f"Próximo relatório: {d['mesProximo']} / {d['ano']}", PW/2, PH*0.37, 9, C_MUTED, F_REG, 'center')
-        draw_icon(cv, PW/2 - 18*mm, PH*0.14, 36*mm, alpha=0.12)
+        draw_icon_bg(cv, PW/2 - 18*mm, PH*0.14, 36*mm, alpha=0.12)
         txt(cv, '@voltsportsscience',      PW/2, 28*mm, 9, C_MUTED, F_REG, 'center')
         txt(cv, 'volt@voltsportscience.com', PW/2, 20*mm, 8.5, C_MUTED, F_REG, 'center')
 
