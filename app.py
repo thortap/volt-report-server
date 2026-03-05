@@ -216,297 +216,345 @@ def generate_pdf(d, photo_ir):
     cv  = canvas.Canvas(buf, pagesize=(PW, PH))
     cv.setTitle(f"Volt Report - {d['nome']} - {d['mes']} {d['ano']}")
 
-    # ── CAPA ──────────────────────────────────────────────────────────────────
-    bg(cv, C_DARK)
+    # ── helpers ──
+    def page_cover():
+        bg(cv, C_DARK)
+        if photo_ir:
+            photo_h = PH * 0.58
+            cv.drawImage(photo_ir, 114.5, 0, width=PW, height=photo_h, preserveAspectRatio=True, anchor='sw', mask='auto')
+            for i in range(50):
+                alpha = (i/50)**1.2
+                sf(cv, C_DARK); cv.setFillAlpha(alpha * 0.92)
+                strip = photo_h / 50
+                cv.rect(0, photo_h - (i+1)*strip, PW, strip+1, fill=1, stroke=0)
+            cv.setFillAlpha(1)
+            for i in range(30):
+                alpha = 1 - (i/30)**0.7
+                sf(cv, C_DARK); cv.setFillAlpha(alpha * 0.9)
+                strip = photo_h * 0.35 / 30
+                cv.rect(0, i*strip, PW, strip+1, fill=1, stroke=0)
+            cv.setFillAlpha(1)
+            sf(cv, C_DARK); cv.rect(0, photo_h - 2, PW, PH - photo_h + 4, fill=1, stroke=0)
+        sf(cv, C_GREEN); cv.rect(0, PH-4, PW, 4, fill=1, stroke=0)
+        draw_logo_full(cv, M - 15.46*mm, PH - 32*mm, w=58*mm)
+        draw_icon(cv, PW - 38*mm, PH - 42*mm, 34*mm, alpha=0.28)
+        sf(cv, C_WHITE); cv.setFont(F_BOLD, 48)
+        cv.drawString(M, PH*0.72, 'REPORT')
+        cv.setFont(F_BOLD, 26)
+        cv.drawString(M, PH*0.72 - 32, 'MENSAL')
+        hline(cv, M, PH*0.72 - 70, PW - 2*M, C_GREEN, 1.2)
+        sf(cv, C_WHITE); cv.setFont(F_BOLD, 16)
+        cv.drawString(M, PH*0.72 - 88, d['nome'].upper())
+        sf(cv, C_GREEN); cv.setFont(F_BOLD, 11)
+        cv.drawString(M, PH*0.72 - 104, f"{d['mes'].upper()} / {d['ano']}")
+        txt(cv, 'DOCUMENTO CONFIDENCIAL', M, PH*0.72 - 50, 8, C_MUTED, F_REG)
+        footer(cv, '')
 
-    if photo_ir:
-        photo_h = PH * 0.58
-        cv.drawImage(photo_ir, 114.5, 0, width=PW, height=photo_h,
-                     preserveAspectRatio=True, anchor='sw', mask='auto')
-        for i in range(50):
-            alpha = (i/50)**1.2
-            sf(cv, C_DARK); cv.setFillAlpha(alpha * 0.92)
-            strip = photo_h / 50
-            cv.rect(0, photo_h - (i+1)*strip, PW, strip+1, fill=1, stroke=0)
-        cv.setFillAlpha(1)
-        for i in range(30):
-            alpha = 1 - (i/30)**0.7
-            sf(cv, C_DARK); cv.setFillAlpha(alpha * 0.9)
-            strip = photo_h * 0.35 / 30
-            cv.rect(0, i*strip, PW, strip+1, fill=1, stroke=0)
-        cv.setFillAlpha(1)
-        sf(cv, C_DARK); cv.rect(0, photo_h - 2, PW, PH - photo_h + 4, fill=1, stroke=0)
-
-    sf(cv, C_GREEN); cv.rect(0, PH-4, PW, 4, fill=1, stroke=0)
-    draw_logo(cv, M - 15.46*mm, PH - 32*mm, w=58*mm)
-    draw_icon_bg(cv, PW - 38*mm, PH - 42*mm, 34*mm, alpha=0.08)
-
-    sf(cv, C_WHITE); cv.setFont(F_BOLD, 48)
-    cv.drawString(M, PH*0.72, 'REPORT')
-    cv.setFont(F_BOLD, 26)
-    cv.drawString(M, PH*0.72 - 32, 'MENSAL')
-    hline(cv, M, PH*0.72 - 70, PW - 2*M, C_GREEN, 1.2)
-
-    txt(cv, 'DOCUMENTO CONFIDENCIAL', M, PH*0.72 - 50, 8, C_MUTED, F_REG)
-    sf(cv, C_WHITE); cv.setFont(F_BOLD, 16)
-    cv.drawString(M, PH*0.72 - 88, d['nome'].upper())
-    sf(cv, C_GREEN); cv.setFont(F_BOLD, 11)
-    cv.drawString(M, PH*0.72 - 104, f"{d['mes'].upper()} / {d['ano']}")
-
-    footer(cv, '')
-    cv.showPage()
-
-    # ── JOGOS & DISPONIBILIDADE ───────────────────────────────────────────────
-    bg(cv); top_bar(cv)
-    draw_icon_bg(cv, PW - 36*mm, PH - 50*mm, 32*mm)
-
-    y = PH - 22*mm
-    section_label(cv, '01 — Jogos', M, y)
-
-    cw = (PW - 2*M - 4*mm) / 2
-    cy = y - 38*mm
-    for i, (val, lbl, sub, col) in enumerate([
-        (d['jogosParticipou'], 'JOGOS', f"{d['mes']} {d['ano']}", C_GREEN),
-        (d['jogosAnterior'],   'JOGOS', d['mesAnterior'], C_MUTED),
-    ]):
-        cx = M + i*(cw + 4*mm)
-        rr(cv, cx, cy, cw, 32*mm, fc=C_CARD)
-        sf(cv, col); cv.roundRect(cx, cy, 2.5*mm, 32*mm, 1.5*mm, fill=1, stroke=0)
-        sf(cv, col); cv.setFont(F_BOLD, 36)
-        cv.drawString(cx + 8*mm, cy + 18*mm, str(val))
-        txt(cv, lbl, cx + 8*mm, cy + 10*mm, 8, C_WHITE, F_BOLD)
-        txt(cv, sub, cx + 8*mm, cy + 4*mm, 7.5, C_MUTED, F_REG)
-
-    jogos_chart = bar_chart(
-        [d['jogosParticipou'], d['jogosAnterior']],
-        [f"{d['mes']}/{d['ano']}", d['mesAnterior']],
-        ['#2EC471','#506050'], 'JOGOS DISPUTADOS'
-    )
-    cv.drawImage(jogos_chart, M, cy - 55*mm, width=PW - 2*M, height=38*mm)
-
-    y2 = cy - 65*mm
-    hline(cv, M, y2, PW - 2*M, C_MUTED, 0.4)
-    section_label(cv, '02 — Disponibilidade', M, y2 - 8*mm)
-
-    disp = d['disponibilidade']
-    disp_col = C_GREEN if disp >= 80 else (C_WARN if disp >= 50 else C_RED)
-    rr(cv, M, y2 - 50*mm, PW - 2*M, 38*mm, fc=C_CARD)
-    sf(cv, disp_col); cv.setFont(F_BOLD, 52)
-    cv.drawCentredString(PW/2, y2 - 26*mm, f'{disp}%')
-    txt(cv, f"{d['jogosParticipou']} de {d['jogosPossiveis']} jogos possíveis",
-        PW/2, y2 - 36*mm, 9, C_MUTED, F_REG, 'center')
-    txt(cv, 'DISPONIBILIDADE NO MÊS', PW/2, y2 - 44*mm, 7.5, C_MUTED, F_BOLD, 'center')
-
-    bar_y = y2 - 70*mm
-    rr(cv, M, bar_y, PW - 2*M, 17*mm, fc=C_CARD)
-    txt(cv, 'MINUTOS JOGADOS', M + 4*mm, bar_y + 10*mm, 7.5, C_WHITE, F_BOLD)
-    bw2 = PW - 2*M - 8*mm
-    mp  = d['minutosPossiveis']
-    pct = d['minutosJogados'] / mp if mp > 0 else 0
-    rr(cv, M + 4*mm, bar_y + 3*mm, bw2, 5*mm, r=2*mm, fc=C_MID)
-    rr(cv, M + 4*mm, bar_y + 3*mm, bw2*pct, 5*mm, r=2*mm, fc=C_GREEN)
-    txt(cv, f"{d['minutosJogados']} min", M + 4*mm + bw2*pct + 2*mm, bar_y + 5*mm, 7.5, C_WHITE, F_BOLD)
-    diff_min = d['minutosJogados'] - d['minutosAnterior']
-    diff_str = f"{'+'if diff_min>=0 else ''}{diff_min} min vs {d['mesAnterior']}"
-    diff_col = C_GREEN if diff_min >= 0 else C_RED
-    txt(cv, diff_str, M + 4*mm, bar_y + 0.5*mm, 7, diff_col, F_REG)
-
-    footer(cv, 2)
-    cv.showPage()
-
-    # ── ATIVIDADES & WELLNESS ─────────────────────────────────────────────────
-    bg(cv); top_bar(cv)
-    draw_icon_bg(cv, PW - 36*mm, PH - 50*mm, 32*mm)
-
-    y = PH - 22*mm
-    section_label(cv, '03 — Atividades Realizadas', M, y)
-
-    ativs = [
-        (d['sessTreino'], 'TREINO EM CASA', 'Protocolo individual supervisionado pela Volt', C_GREEN),
-        (d['sessMed'],    'MEDICINA',       'Consultas e avaliações clínicas', C_LIME),
-        (d['sessPsi'],    'PSICOLOGIA',     'Sessões de suporte psicológico', C_GREEN),
-        (d['sessNut'],    'NUTRIÇÃO',       'Acompanhamento nutricional', C_LIME),
-    ]
-    for i, (num, title, desc, col) in enumerate(ativs):
-        if num == 0: continue
-        ay = y - 14*mm - i*30*mm
-        rr(cv, M, ay - 24*mm, PW - 2*M, 22*mm, fc=C_CARD)
-        sf(cv, col); cv.roundRect(M, ay - 24*mm, 2.5*mm, 22*mm, 1.5*mm, fill=1, stroke=0)
-        sf(cv, col); cv.setFont(F_BOLD, 28)
-        cv.drawString(M + 5*mm, ay - 10*mm, str(num).zfill(2))
-        txt(cv, title, M + 24*mm, ay - 7*mm, 9, C_WHITE, F_BOLD)
-        txt(cv, desc,  M + 24*mm, ay - 15*mm, 7.5, C_MUTED, F_REG)
-
-    total = d['sessTreino'] + d['sessMed'] + d['sessPsi'] + d['sessNut']
-    ty = y - 14*mm - 4*30*mm + 10*mm
-    rr(cv, M, ty, PW - 2*M, 10*mm, r=2*mm, fc=C_MID)
-    txt(cv, 'TOTAL DE ATIVIDADES NO MÊS', M + 4*mm, ty + 6.5*mm, 8, C_MUTED, F_BOLD)
-    txt(cv, str(total), PW - M - 4*mm, ty + 6.5*mm, 11, C_GREEN, F_BOLD, 'right')
-
-    div_y = ty - 10*mm
-    hline(cv, M, div_y, PW - 2*M, C_MUTED, 0.4)
-
-    section_label(cv, '04 — Wellness Score', M, div_y - 8*mm)
-
-    g_y = div_y - 62*mm
-    w_gauge = wellness_gauge(d['wellness'], max_s=25)
-    cv.drawImage(w_gauge, PW/2 - 28*mm, g_y, width=56*mm, height=40*mm)
-
-    w_score = d['wellness']
-    w_label = 'BOM' if w_score <= 12 else ('MÉDIO' if w_score <= 18 else 'RUIM')
-    w_col   = C_GREEN if w_score <= 12 else (C_WARN if w_score <= 18 else C_RED)
-
-    scale_y = g_y - 18*mm
-    scale_items = [('1–12', 'BOM', C_GREEN), ('13–18', 'MÉDIO', C_WARN), ('19–25', 'RUIM', C_RED)]
-    sw = (PW - 2*M - 4*mm) / 3
-    active_i = 0 if w_score <= 12 else (1 if w_score <= 18 else 2)
-    for i, (rng, lbl, col) in enumerate(scale_items):
-        sx = M + i*(sw + 2*mm)
-        rr(cv, sx, scale_y - 14*mm, sw, 12*mm, r=2.5*mm, fc=col if i == active_i else C_CARD)
-        tc = C_DARK if i == active_i else col
-        txt(cv, rng, sx + sw/2, scale_y - 6*mm, 9, tc, F_BOLD, 'center')
-        txt(cv, lbl, sx + sw/2, scale_y - 12*mm, 6.5, tc, F_BOLD, 'center')
-
-    rr(cv, M, scale_y - 30*mm, PW - 2*M, 12*mm, r=2*mm, fc=C_MID)
-    txt(cv, f'Score {w_score}/25 — {w_label}', M + 4*mm, scale_y - 22*mm, 8, w_col, F_BOLD)
-    txt(cv, 'Média de: sono, humor, fadiga, estresse e dor muscular',
-        M + 4*mm, scale_y - 28*mm, 7, C_MUTED, F_REG)
-
-    footer(cv, 3)
-    cv.showPage()
-
-    # ── READINESS ─────────────────────────────────────────────────────────────
-    has_cmj = any(v is not None for v in d['cmj'])
-    has_hrv = any(v is not None for v in d['hrv'])
-
-    if has_cmj or has_hrv:
+    def page_jogos():
         bg(cv); top_bar(cv)
-        draw_icon_bg(cv, PW - 36*mm, PH - 50*mm, 32*mm)
+        draw_icon(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
+        y = PH - 22*mm
+
+        sf(cv, C_GREEN); cv.setFont(F_BOLD, 13)
+        cv.drawString(M, y, '01 — JOGOS')
+        hline(cv, M, y - 3, PW - 2*M, C_GREEN, 0.7)
+
+        jogos_p  = d['jogosParticipou']
+        jogos_a  = d['jogosAnterior']
+        mes_a    = d['mesAnterior']
+        jogos_ir = bar_img([jogos_a, jogos_p],
+                           [mes_a, d['mes']],
+                           ['#506050', '#2EC471'], 'JOGOS DISPUTADOS')
+        cv.drawImage(jogos_ir, M, y - 56*mm, width=PW - 2*M, height=52*mm)
+
+        cy = y - 56*mm
+        y2 = cy - 16*mm
+        hline(cv, M, y2, PW - 2*M, C_MUTED, 0.4)
+
+        sf(cv, C_GREEN); cv.setFont(F_BOLD, 13)
+        cv.drawString(M, y2 - 8*mm, '02 — DISPONIBILIDADE')
+        hline(cv, M, y2 - 11*mm, PW - 2*M, C_GREEN, 0.7)
+
+        disp = d['disponibilidade']
+        rr(cv, M, y2 - 50*mm, PW - 2*M, 38*mm, fc=C_CARD)
+        sf(cv, C_GREEN); cv.setFont(F_BOLD, 52)
+        cv.drawCentredString(PW/2, y2 - 26*mm, f'{disp}%')
+        txt(cv, f"{d['jogosParticipou']} de {d['jogosPossiveis']} jogos possíveis", PW/2, y2 - 36*mm, 9, C_MUTED, F_REG, 'center')
+        txt(cv, d['mes'].upper(), PW/2, y2 - 44*mm, 7.5, C_MUTED, F_BOLD, 'center')
+
+        bar_y = y2 - 70*mm
+        mp  = d['minutosPossiveis']
+        mj  = d['minutosJogados']
+        ma  = d['minutosAnterior']
+        pct_bar = mj / mp if mp > 0 else 0
+        rr(cv, M, bar_y, PW - 2*M, 17*mm, fc=C_CARD)
+        txt(cv, 'MINUTOS JOGADOS', M + 4*mm, bar_y + 10*mm, 7.5, C_WHITE, F_BOLD)
+        bw2 = PW - 2*M - 8*mm
+        rr(cv, M + 4*mm, bar_y + 3*mm, bw2, 5*mm, r=2*mm, fc=C_MID)
+        rr(cv, M + 4*mm, bar_y + 3*mm, bw2*pct_bar, 5*mm, r=2*mm, fc=C_GREEN)
+        txt(cv, f'{mj} min', M + 4*mm + bw2*pct_bar + 2*mm, bar_y + 5*mm, 7.5, C_WHITE, F_BOLD)
+        diff_min = mj - ma
+        txt(cv, f"{'+'if diff_min>=0 else ''}{diff_min} min vs {mes_a}", M + 4*mm, bar_y + 0.5*mm, 7, C_MUTED, F_REG)
+
+        mins_ir = bar_img([mj, ma], [d['mes'], mes_a], ['#2EC471','#506050'], 'MINUTOS JOGADOS', ' min')
+        cv.drawImage(mins_ir, M, bar_y - 52*mm, width=PW - 2*M, height=48*mm)
+        footer(cv, '2')
+
+    def page_atividades():
+        bg(cv); top_bar(cv)
+        draw_icon(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
+        y = PH - 22*mm
+
+        sf(cv, C_GREEN); cv.setFont(F_BOLD, 13)
+        cv.drawString(M, y, '03 — ATIVIDADES REALIZADAS')
+        hline(cv, M, y - 3, PW - 2*M, C_GREEN, 0.7)
+
+        atividades = [
+            (str(d['sessTreino']), 'SESSÕES DE TREINO EM CASA ~', 'Sessões preventivas individualizadas', C_GREEN),
+            (str(d['sessMed']),    'MEDICINA DO ESPORTE',         'Avaliação clínica de rotina, sem intercorrências', C_LIME),
+        ]
+        if d['sessPsi'] > 0:
+            atividades.append((str(d['sessPsi']), 'PSICOLOGIA', 'Sessões de suporte psicológico', C_GREEN))
+        if d['sessNut'] > 0:
+            atividades.append((str(d['sessNut']), 'NUTRIÇÃO', 'Acompanhamento nutricional', C_LIME))
+
+        for i, (num, title, desc, col) in enumerate(atividades):
+            ay = y - 22*mm - i*36*mm
+            rr(cv, M, ay - 28*mm, PW - 2*M, 26*mm, fc=C_CARD)
+            sf(cv, col); cv.setFont(F_BOLD, 34)
+            cv.drawString(M + 5*mm, ay - 12*mm, num)
+            txt(cv, title, M + 26*mm, ay - 8*mm, 9.5, C_WHITE, F_BOLD)
+            txt(cv, desc,  M + 26*mm, ay - 17*mm, 8, C_MUTED, F_REG)
+            sf(cv, col); cv.roundRect(M, ay - 28*mm, 2.5*mm, 26*mm, 1.5*mm, fill=1, stroke=0)
+
+        total = d['sessTreino'] + d['sessMed'] + d['sessPsi'] + d['sessNut']
+        ty = y - 22*mm - len(atividades)*36*mm - 4*mm
+        rr(cv, M, ty - 12*mm, PW - 2*M, 10*mm, r=2*mm, fc=C_MID)
+        txt(cv, 'TOTAL DE ATIVIDADES NO MÊS', M + 4*mm, ty - 7*mm, 8, C_MUTED, F_BOLD)
+        txt(cv, str(total), PW - M - 4*mm, ty - 7*mm, 11, C_GREEN, F_BOLD, 'right')
+
+        div_y = ty - 22*mm
+        hline(cv, M, div_y, PW - 2*M, C_MUTED, 0.4)
+
+        sf(cv, C_GREEN); cv.setFont(F_BOLD, 13)
+        cv.drawString(M, div_y - 8*mm, '04 — WELLNESS SCORE')
+        hline(cv, M, div_y - 11*mm, PW - 2*M, C_GREEN, 0.7)
+
+        w_score = d['wellness']
+        gauge_ir = wellness_gauge(w_score, max_s=25)
+        g_y = div_y - 62*mm
+        cv.drawImage(gauge_ir, PW/2 - 28*mm, g_y, width=56*mm, height=40*mm)
+
+        scale_y = g_y - 18*mm
+        labels_s = [('1–12', 'BOM', C_GREEN), ('13–18', 'MODERADO', C_WARN), ('18–25', 'RUIM', C_RED)]
+        sw = (PW - 2*M - 4*mm) / 3
+        for i, (rng_lbl, lbl, col) in enumerate(labels_s):
+            sx = M + i*(sw + 2*mm)
+            active = (i==0 and w_score <= 12) or (i==1 and 13 <= w_score <= 18) or (i==2 and w_score > 18)
+            rr(cv, sx, scale_y - 14*mm, sw, 12*mm, r=2.5*mm, fc=col if active else C_CARD)
+            tc = C_DARK if active else col
+            txt(cv, rng_lbl, sx + sw/2, scale_y - 5*mm, 9, tc, F_BOLD, 'center')
+            txt(cv, lbl, sx + sw/2, scale_y - 11*mm, 7, tc, F_BOLD, 'center')
+
+        rr(cv, M, scale_y - 30*mm, PW - 2*M, 13*mm, r=3*mm, fc=C_MID)
+        if w_score <= 12:
+            zona = 'BOM'; zona_col = C_GREEN
+        elif w_score <= 18:
+            zona = 'MODERADO'; zona_col = C_WARN
+        else:
+            zona = 'RUIM'; zona_col = C_RED
+        sf(cv, zona_col); cv.setFont(F_BOLD, 8)
+        cv.drawString(M + 4*mm, scale_y - 22*mm, f'ZONA {zona}:')
+        sf(cv, C_WHITE); cv.setFont(F_REG, 8)
+        cv.drawString(M + 36*mm, scale_y - 22*mm, 'Score mensal baseado em sono, humor, fadiga, estresse e dor muscular')
+        footer(cv, '3')
+
+    def page_readiness():
+        bg(cv); top_bar(cv)
+        draw_icon(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
+
+        def make_chart(vals, prev, color):
+            labels = ['S1','S2','S3','S4']
+            fig, ax = plt.subplots(figsize=(5, 3.2))
+            fig.patch.set_facecolor('#0E120E')
+            ax.set_facecolor('#0E120E')
+            bars = ax.bar(labels, vals, color=color, width=0.5, edgecolor='none', zorder=3)
+            if prev:
+                ax.axhline(prev, color='#506050', linewidth=1.5, linestyle='--', zorder=2)
+            mn = min(min(vals), prev or min(vals))
+            mx = max(max(vals), prev or max(vals))
+            rng = mx - mn or 1
+            for bar, v in zip(bars, vals):
+                ax.text(bar.get_x()+bar.get_width()/2, v + rng*0.05,
+                        str(v), ha='center', va='bottom', color='white', fontsize=11, fontweight='bold')
+            ax.set_ylim(mn*0.9, mx*1.18)
+            ax.tick_params(axis='x', colors='#82A082', labelsize=11, length=0)
+            ax.tick_params(axis='y', left=False, labelleft=False)
+            for sp in ax.spines.values(): sp.set_visible(False)
+            ax.grid(axis='y', color='#1A2A1A', linewidth=0.6, zorder=0)
+            ibuf = io.BytesIO()
+            fig.savefig(ibuf, dpi=120, facecolor='#0E120E', bbox_inches='tight', pad_inches=0.1, format='png')
+            plt.close()
+            ibuf.seek(0)
+            return ImageReader(ibuf)
+
+        cmj_vals = [v for v in d['cmj'] if v is not None]
+        hrv_vals = [v for v in d['hrv'] if v is not None]
+        cmj_prev = d.get('cmjAnterior')
+        hrv_prev = d.get('hrvAnterior')
+
+        # pad to 4
+        while len(cmj_vals) < 4: cmj_vals.append(cmj_vals[-1] if cmj_vals else 0)
+        while len(hrv_vals) < 4: hrv_vals.append(hrv_vals[-1] if hrv_vals else 0)
+
+        cmj_avg  = sum(cmj_vals)/len(cmj_vals)
+        hrv_avg  = sum(hrv_vals)/len(hrv_vals)
+        diff_cmj = ((cmj_avg - cmj_prev)/cmj_prev*100) if cmj_prev else None
+        diff_hrv = ((hrv_avg - hrv_prev)/hrv_prev*100) if hrv_prev else None
+        diff_col_cmj = C_GREEN if (diff_cmj or 0) >= 0 else C_RED
+        diff_col_hrv = C_GREEN if (diff_hrv or 0) >= 0 else C_RED
+
+        cmj_ir = make_chart(cmj_vals, cmj_prev, '#2EC471')
+        hrv_ir = make_chart(hrv_vals, hrv_prev, '#46C4A8')
 
         y = PH - 22*mm
-        section_label(cv, '05 — Readiness', M, y)
 
-        ry = y - 10*mm
-        if has_cmj:
-            cmj_vals = [v for v in d['cmj'] if v is not None]
-            cmj_chart = readiness_chart(d['cmj'], d.get('cmjAnterior'), 'CMJ — ALTURA DO SALTO', ' cm')
-            if cmj_chart:
-                cv.drawImage(cmj_chart, M, ry - 46*mm, width=PW - 2*M, height=40*mm)
+        # CMJ
+        sf(cv, C_GREEN); cv.setFont(F_BOLD, 13)
+        cv.drawString(M, y, '05 — PRONTIDÃO NEUROMUSCULAR (CMJ)')
+        hline(cv, M, y - 3, PW - 2*M, C_GREEN, 0.7)
+        stats_cmj = f'Média {d["mes"]}/{d["ano"]}: {cmj_avg:.1f} cm'
+        if diff_cmj is not None:
+            stats_cmj += f'  ·  {d["mesAnterior"]}: {cmj_prev} cm  ·  {"+" if diff_cmj>=0 else ""}{diff_cmj:.1f}%'
+        txt(cv, stats_cmj, M, y - 10*mm, 8, C_MUTED, F_REG)
+        cv.drawImage(cmj_ir, M + 10*mm, y - 68*mm, width=PW - 4*M, height=54*mm)
 
-            rr(cv, M, ry - 58*mm, PW - 2*M, 10*mm, r=2*mm, fc=C_CARD)
-            if d.get('cmjAnterior') and cmj_vals:
-                avg = sum(cmj_vals)/len(cmj_vals)
-                diff = ((avg - d['cmjAnterior'])/d['cmjAnterior']*100)
-                diff_col = C_GREEN if diff >= 0 else C_RED
-                txt(cv, f"Média do mês: {avg:.1f} cm", M + 4*mm, ry - 52*mm, 8, C_WHITE, F_BOLD)
-                txt(cv, f"{'+'if diff>=0 else ''}{diff:.1f}% vs {d['mesAnterior']}", PW-M-4*mm, ry - 52*mm, 8, diff_col, F_BOLD, 'right')
-            if d.get('cmjObs'):
-                txt(cv, d['cmjObs'], M + 4*mm, ry - 56*mm, 7, C_MUTED, F_REG)
-            ry -= 66*mm
+        # HRV
+        y2 = y - 84*mm
+        sf(cv, C_GREEN); cv.setFont(F_BOLD, 13)
+        cv.drawString(M, y2, '06 — VARIABILIDADE DA FREQUÊNCIA CARDÍACA (HRV)')
+        hline(cv, M, y2 - 3, PW - 2*M, C_GREEN, 0.7)
+        stats_hrv = f'Média {d["mes"]}/{d["ano"]}: {hrv_avg:.1f} ms'
+        if diff_hrv is not None:
+            stats_hrv += f'  ·  {d["mesAnterior"]}: {hrv_prev} ms  ·  {"+" if diff_hrv>=0 else ""}{diff_hrv:.1f}%'
+        txt(cv, stats_hrv, M, y2 - 10*mm, 8, C_MUTED, F_REG)
+        cv.drawImage(hrv_ir, M + 10*mm, y2 - 68*mm, width=PW - 4*M, height=54*mm)
 
-        if has_hrv:
-            hrv_vals = [v for v in d['hrv'] if v is not None]
-            hrv_chart = readiness_chart(d['hrv'], d.get('hrvAnterior'), 'HRV — VARIABILIDADE CARDÍACA', ' ms')
-            if hrv_chart:
-                cv.drawImage(hrv_chart, M, ry - 46*mm, width=PW - 2*M, height=40*mm)
+        # VOLT INSIGHTS
+        insight_y = y2 - 76*mm
+        sf(cv, C_GREEN); cv.setFont(F_BOLD, 10)
+        cv.drawString(M, insight_y, 'VOLT INSIGHTS')
+        hline(cv, M, insight_y - 2, PW - 2*M, C_GREEN, 0.5)
 
-            rr(cv, M, ry - 58*mm, PW - 2*M, 10*mm, r=2*mm, fc=C_CARD)
-            if d.get('hrvAnterior') and hrv_vals:
-                avg = sum(hrv_vals)/len(hrv_vals)
-                diff = ((avg - d['hrvAnterior'])/d['hrvAnterior']*100)
-                diff_col = C_GREEN if diff >= 0 else C_RED
-                txt(cv, f"Média do mês: {avg:.1f} ms", M + 4*mm, ry - 52*mm, 8, C_WHITE, F_BOLD)
-                txt(cv, f"{'+'if diff>=0 else ''}{diff:.1f}% vs {d['mesAnterior']}", PW-M-4*mm, ry - 52*mm, 8, diff_col, F_BOLD, 'right')
-            if d.get('hrvObs'):
-                txt(cv, d['hrvObs'], M + 4*mm, ry - 56*mm, 7, C_MUTED, F_REG)
+        insights = []
+        if cmj_vals[-1] < (cmj_prev or cmj_avg):
+            insights.append(f'CMJ: queda na S4 ({cmj_vals[-1]} cm) — possível acúmulo de fadiga ao final do mês.')
+        elif cmj_avg > (cmj_prev or 0):
+            insights.append(f'CMJ: média mensal ({cmj_avg:.1f} cm) superior ao mês anterior — boa resposta neuromuscular.')
+        if max(cmj_vals) - min(cmj_vals) > 3:
+            insights.append(f'CMJ: variação de {max(cmj_vals)-min(cmj_vals):.1f} cm entre semanas — oscilação relevante para o planejamento de cargas.')
+        if hrv_vals[-1] < (hrv_prev or hrv_avg):
+            insights.append(f'HRV: queda na S4 ({hrv_vals[-1]} ms) — sinal de estresse acumulado ou recuperação insuficiente.')
+        elif hrv_avg > (hrv_prev or 0):
+            insights.append(f'HRV: média mensal ({hrv_avg:.1f} ms) acima do mês anterior — sistema nervoso autônomo respondendo bem.')
+        if max(hrv_vals) - min(hrv_vals) > 30:
+            insights.append(f'HRV: amplitude de {max(hrv_vals)-min(hrv_vals)} ms entre semanas — variabilidade elevada, períodos de maior e menor estresse fisiológico.')
 
-        footer(cv, 4)
-        cv.showPage()
+        iy = insight_y - 8*mm
+        for insight in insights:
+            rr(cv, M, iy - 10*mm, PW - 2*M, 10*mm, r=2*mm, fc=C_MID)
+            sf(cv, C_GREEN); cv.setFont(F_BOLD, 7)
+            cv.drawString(M + 3*mm, iy - 4*mm, '▸')
+            sf(cv, C_WHITE); cv.setFont(F_REG, 7.5)
+            max_w = PW - 2*M - 10*mm
+            display = insight
+            while cv.stringWidth(display, F_REG, 7.5) > max_w and len(display) > 10:
+                display = display[:-4] + '...'
+            cv.drawString(M + 7*mm, iy - 4*mm, display)
+            iy -= 13*mm
 
-    # ── PONTOS DE ATENÇÃO & NÃO ATINGIMOS ────────────────────────────────────
-    bg(cv); top_bar(cv)
-    draw_icon_bg(cv, PW - 36*mm, PH - 50*mm, 32*mm)
+        footer(cv, '4')
 
-    page_n = 5 if (has_cmj or has_hrv) else 4
-    y = PH - 22*mm
+    def page_alertas():
+        bg(cv); top_bar(cv)
+        draw_icon(cv, PW - 36*mm, PH - 50*mm, 32*mm, alpha=0.06)
+        y = PH - 22*mm
 
-    if d.get('pontosAtencao'):
-        section_label(cv, '06 — Pontos de Atenção', M, y, C_WARN)
-        lines = d['pontosAtencao']
-        box_h = max(40*mm, len(lines)//3 * mm + 40*mm)
-        rr(cv, M, y - box_h - 10*mm, PW - 2*M, box_h, fc=C_CARD)
-        sf(cv, C_WARN); cv.roundRect(M, y - box_h - 10*mm, 3*mm, box_h, 1.5*mm, fill=1, stroke=0)
-        rr(cv, M + 6*mm, y - 22*mm, 10*mm, 10*mm, r=5*mm, fc=C_WARN)
-        txt(cv, '!', M + 11*mm, y - 16*mm, 9, C_DARK, F_BOLD, 'center')
-        txt(cv, 'PONTOS DE ATENÇÃO', M + 20*mm, y - 16*mm, 10, C_WHITE, F_BOLD)
+        # PONTOS DE ATENÇÃO
+        sf(cv, C_WARN); cv.setFont(F_BOLD, 13)
+        cv.drawString(M, y, '07 — PONTOS DE ATENÇÃO')
+        hline(cv, M, y - 3, PW - 2*M, C_WARN, 0.7)
 
-        # wrap text
-        words = lines.split()
-        line, line_y = [], y - 28*mm
-        for word in words:
-            test = ' '.join(line + [word])
-            if cv.stringWidth(test, F_REG, 8.5) > (PW - 2*M - 14*mm):
-                txt(cv, ' '.join(line), M + 8*mm, line_y, 8.5, C_WHITE, F_REG)
-                line = [word]; line_y -= 5*mm
-            else:
-                line.append(word)
-        if line:
-            txt(cv, ' '.join(line), M + 8*mm, line_y, 8.5, C_WHITE, F_REG)
+        pontos = d['pontosAtencao']
+        if pontos:
+            lines = [l.strip() for l in pontos.split('\n') if l.strip()]
+            for i, line in enumerate(lines[:3]):
+                ly = y - 22*mm - i*30*mm
+                rr(cv, M, ly - 24*mm, PW - 2*M, 22*mm, fc=C_CARD)
+                sf(cv, C_WARN); cv.roundRect(M, ly - 24*mm, 2.5*mm, 22*mm, 1.5*mm, fill=1, stroke=0)
+                rr(cv, M + 6*mm, ly - 14*mm, 8*mm, 8*mm, r=4*mm, fc=C_WARN)
+                txt(cv, '!', M + 10*mm, ly - 9.5*mm, 8, C_DARK, F_BOLD, 'center')
+                txt(cv, line, M + 18*mm, ly - 10*mm, 9, C_WHITE, F_REG)
+        else:
+            rr(cv, M, y - 30*mm, PW - 2*M, 20*mm, fc=C_CARD)
+            txt(cv, 'Nenhum ponto de atenção registrado neste mês.', M + 4*mm, y - 18*mm, 9, C_MUTED, F_REG)
 
-        y = y - box_h - 18*mm
+        # NÃO ATINGIMOS
+        na_y = y - 120*mm
+        sf(cv, C_RED); cv.setFont(F_BOLD, 13)
+        cv.drawString(M, na_y, '08 — NÃO ATINGIMOS')
+        hline(cv, M, na_y - 3, PW - 2*M, C_RED, 0.7)
 
-    if d.get('naoAtingimos'):
-        section_label(cv, '07 — Não Atingimos', M, y, C_RED)
-        lines = d['naoAtingimos']
-        box_h = max(40*mm, len(lines)//3 * mm + 40*mm)
-        rr(cv, M, y - box_h - 10*mm, PW - 2*M, box_h, fc=C_CARD)
-        sf(cv, C_RED); cv.roundRect(M, y - box_h - 10*mm, 3*mm, box_h, 1.5*mm, fill=1, stroke=0)
-        rr(cv, M + 6*mm, y - 22*mm, 10*mm, 10*mm, r=5*mm, fc=C_RED)
-        txt(cv, 'X', M + 11*mm, y - 16*mm, 9, C_WHITE, F_BOLD, 'center')
-        txt(cv, 'NÃO ATINGIMOS', M + 20*mm, y - 16*mm, 10, C_WHITE, F_BOLD)
+        nao = d['naoAtingimos']
+        if nao:
+            lines = [l.strip() for l in nao.split('\n') if l.strip()]
+            for i, line in enumerate(lines[:3]):
+                ly = na_y - 22*mm - i*30*mm
+                rr(cv, M, ly - 24*mm, PW - 2*M, 22*mm, fc=C_CARD)
+                sf(cv, C_RED); cv.roundRect(M, ly - 24*mm, 2.5*mm, 22*mm, 1.5*mm, fill=1, stroke=0)
+                rr(cv, M + 6*mm, ly - 14*mm, 8*mm, 8*mm, r=4*mm, fc=C_RED)
+                txt(cv, 'X', M + 10*mm, ly - 9.5*mm, 8, C_WHITE, F_BOLD, 'center')
+                txt(cv, line, M + 18*mm, ly - 10*mm, 9, C_WHITE, F_REG)
+        else:
+            rr(cv, M, na_y - 30*mm, PW - 2*M, 20*mm, fc=C_CARD)
+            txt(cv, 'Todos os objetivos foram atingidos neste mês.', M + 4*mm, na_y - 18*mm, 9, C_GREEN, F_BOLD)
 
-        words = lines.split()
-        line, line_y = [], y - 28*mm
-        for word in words:
-            test = ' '.join(line + [word])
-            if cv.stringWidth(test, F_REG, 8.5) > (PW - 2*M - 14*mm):
-                txt(cv, ' '.join(line), M + 8*mm, line_y, 8.5, C_WHITE, F_REG)
-                line = [word]; line_y -= 5*mm
-            else:
-                line.append(word)
-        if line:
-            txt(cv, ' '.join(line), M + 8*mm, line_y, 8.5, C_WHITE, F_REG)
+        footer(cv, '5')
 
-    footer(cv, page_n)
-    cv.showPage()
-
-    # ── ENCERRAMENTO ──────────────────────────────────────────────────────────
-    bg(cv, C_DARK)
-    if photo_ir:
-        cv.saveState(); cv.setFillAlpha(0.2)
-        cv.drawImage(photo_ir, 0, PH*0.25, width=PW, height=PH*0.75,
-                     preserveAspectRatio=False, mask='auto')
-        cv.restoreState()
+    def page_closing():
+        bg(cv, C_DARK)
+        if photo_ir:
+            cv.saveState()
+            cv.setFillAlpha(0.2)
+            cv.drawImage(photo_ir, 0, PH*0.25, width=PW, height=PH*0.75, preserveAspectRatio=False, mask='auto')
+            cv.restoreState()
         sf(cv, C_DARK); cv.setFillAlpha(0.72)
         cv.rect(0, 0, PW, PH, fill=1, stroke=0)
         cv.setFillAlpha(1)
+        sf(cv, C_GREEN); cv.rect(0, PH-4, PW, 4, fill=1, stroke=0)
+        logo_w = 60*mm
+        draw_logo_full(cv, PW/2 - logo_w/2, PH*0.55, w=logo_w)
+        hline(cv, PW/2 - 30*mm, PH*0.52, 60*mm, C_GREEN, 1)
+        txt(cv, 'CHANGE THE MIND,',    PW/2, PH*0.49, 13, C_WHITE, F_BOLD, 'center')
+        txt(cv, 'CHANGE THE ATTITUDE,', PW/2, PH*0.45, 13, C_WHITE, F_BOLD, 'center')
+        txt(cv, 'CHANGE THE GAME.',     PW/2, PH*0.41, 13, C_WHITE, F_BOLD, 'center')
+        txt(cv, f"Próximo relatório: {d['mesProximo']} / {d['ano']}", PW/2, PH*0.37, 9, C_MUTED, F_REG, 'center')
+        draw_icon(cv, PW/2 - 18*mm, PH*0.14, 36*mm, alpha=0.12)
+        txt(cv, '@voltsportsscience',      PW/2, 28*mm, 9, C_MUTED, F_REG, 'center')
+        txt(cv, 'volt@voltsportscience.com', PW/2, 20*mm, 8.5, C_MUTED, F_REG, 'center')
 
-    sf(cv, C_GREEN); cv.rect(0, PH-4, PW, 4, fill=1, stroke=0)
-    logo_w = 60*mm
-    draw_logo(cv, PW/2 - logo_w/2, PH*0.55, w=logo_w)
-    hline(cv, PW/2 - 30*mm, PH*0.52, 60*mm, C_GREEN, 1)
-    txt(cv, 'FOR THE ATHLETE,', PW/2, PH*0.47, 13, C_WHITE, F_BOLD, 'center')
-    txt(cv, 'BY THE ATHLETE.', PW/2, PH*0.43, 13, C_WHITE, F_BOLD, 'center')
-    txt(cv, f"Próximo relatório: {d['mesProximo']} / {d['ano']}", PW/2, PH*0.37, 9, C_MUTED, F_REG, 'center')
-    draw_icon_bg(cv, PW/2 - 18*mm, PH*0.14, 36*mm, alpha=0.12)
-    txt(cv, '@voltsportsscience', PW/2, 28*mm, 9, C_MUTED, F_REG, 'center')
-    txt(cv, 'contato@voltsportsscience.com', PW/2, 20*mm, 8.5, C_MUTED, F_REG, 'center')
-    txt(cv, '#changethegame', PW/2, 12*mm, 8, C_GREEN, F_BOLD, 'center')
-    cv.showPage()
+    # ── BUILD PAGES ──
+    page_cover();    cv.showPage()
+    page_jogos();    cv.showPage()
+    page_atividades(); cv.showPage()
+    page_readiness(); cv.showPage()
+    page_alertas();  cv.showPage()
+    page_closing();  cv.showPage()
 
     cv.save()
     buf.seek(0)
     return buf
+
 
 # ── ROTA PRINCIPAL ────────────────────────────────────────────────────────────
 @app.route('/generate', methods=['POST'])
